@@ -52,6 +52,13 @@ function formatDate(value: string) {
     : new Intl.DateTimeFormat("de-DE", { day: "2-digit", month: "short", year: "numeric" }).format(date);
 }
 
+function localDateValue(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 function downloadFile(content: string, name: string, type: string) {
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
@@ -81,10 +88,23 @@ function Logo() {
   );
 }
 
-function HoldingForm({ item, onCancel, onSave }: { item?: Holding; onCancel: () => void; onSave: (holding: Holding) => void }) {
+function HoldingForm({
+  item,
+  currency,
+  onCancel,
+  onSave,
+  onQuickSave,
+}: {
+  item?: Holding;
+  currency: AppSettings["currency"];
+  onCancel: () => void;
+  onSave: (holding: Holding) => void;
+  onQuickSave: (companyName: string, netDividend: number, payDate: string) => void;
+}) {
+  const [mode, setMode] = useState<"quick" | "details" | null>(item ? "details" : null);
   const [frequency, setFrequency] = useState<Frequency>(item?.frequency ?? "Quartalsweise");
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  function submitDetails(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     onSave({
@@ -103,8 +123,66 @@ function HoldingForm({ item, onCancel, onSave }: { item?: Holding; onCancel: () 
     });
   }
 
+  function submitQuick(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    onQuickSave(
+      String(data.get("companyName") ?? "").trim(),
+      Number(data.get("netDividend")) || 0,
+      String(data.get("payDate") ?? ""),
+    );
+  }
+
+  if (!mode) {
+    return (
+      <div className="modal-card compact-modal">
+        <div className="modal-head">
+          <div>
+            <span className="eyebrow">NEUE POSITION</span>
+            <h2>Wie möchtest du starten?</h2>
+          </div>
+          <button type="button" className="icon-button" onClick={onCancel} aria-label="Schließen">×</button>
+        </div>
+        <p className="entry-choice-intro">Wähle nur die Angaben, die du gerade erfassen möchtest. Details kannst du später jederzeit ergänzen.</p>
+        <div className="entry-choice-grid">
+          <button type="button" className="entry-choice recommended" onClick={() => setMode("quick")}>
+            <span className="entry-choice-icon">↗</span>
+            <span><strong>Schneller Eintrag</strong><small>Nur Unternehmen und eingegangene Dividende</small></span>
+            <i>Empfohlen</i>
+          </button>
+          <button type="button" className="entry-choice" onClick={() => setMode("details")}>
+            <span className="entry-choice-icon details">▦</span>
+            <span><strong>Portfolio-Details</strong><small>Stückzahl, Kurse, ISIN, Depot und weitere Angaben</small></span>
+            <i>→</i>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (mode === "quick") {
+    return (
+      <form onSubmit={submitQuick} className="modal-card compact-modal">
+        <div className="modal-head">
+          <div>
+            <span className="eyebrow">SCHNELLER EINTRAG</span>
+            <h2>Dividende erfassen</h2>
+          </div>
+          <button type="button" className="icon-button" onClick={onCancel} aria-label="Schließen">×</button>
+        </div>
+        <p className="entry-choice-intro">Wähle den tatsächlichen Zahltag – auch rückwirkend. Steuer und weitere Angaben kannst du danach unter „Zahlungen“ bearbeiten.</p>
+        <div className="form-grid quick-entry-fields">
+          <label className="field wide">Unternehmen<input name="companyName" required placeholder="z. B. Allianz SE" /></label>
+          <label className="field wide">Eingegangene Dividende (netto · {currency})<input name="netDividend" type="number" min="0.01" step="0.01" required placeholder="0,00" /></label>
+          <label className="field wide">Zahltag<input name="payDate" type="date" defaultValue={localDateValue()} required /></label>
+        </div>
+        <div className="modal-actions split-actions"><button type="button" className="button ghost" onClick={() => setMode(null)}>← Auswahl</button><div><button type="button" className="button ghost" onClick={onCancel}>Abbrechen</button><button className="button dark">Dividende speichern</button></div></div>
+      </form>
+    );
+  }
+
   return (
-    <form onSubmit={submit} className="modal-card">
+    <form onSubmit={submitDetails} className="modal-card">
       <div className="modal-head">
         <div>
           <span className="eyebrow">POSITION</span>
@@ -124,7 +202,10 @@ function HoldingForm({ item, onCancel, onSave }: { item?: Holding; onCancel: () 
         <label className="field">Sektor<input name="sector" defaultValue={item?.sector} placeholder="z. B. Versicherungen" /></label>
         <label className="field wide">Depot / Konto<input name="account" defaultValue={item?.account} placeholder="Hauptdepot" /></label>
       </div>
-      <div className="modal-actions"><button type="button" className="button ghost" onClick={onCancel}>Abbrechen</button><button className="button dark">{item ? "Änderungen speichern" : "Position anlegen"}</button></div>
+      <div className={`modal-actions ${item ? "" : "split-actions"}`}>
+        {!item && <button type="button" className="button ghost" onClick={() => setMode(null)}>← Auswahl</button>}
+        <div><button type="button" className="button ghost" onClick={onCancel}>Abbrechen</button><button className="button dark">{item ? "Änderungen speichern" : "Position anlegen"}</button></div>
+      </div>
     </form>
   );
 }
@@ -244,6 +325,46 @@ export default function TrackerApp() {
 
   function saveHolding(holding: Holding) {
     mutate((current) => ({ ...current, holdings: current.holdings.some((entry) => entry.id === holding.id) ? current.holdings.map((entry) => entry.id === holding.id ? holding : entry) : [...current.holdings, holding] }), modal && "item" in modal && modal.item ? "Position aktualisiert" : "Position hinzugefügt");
+    setModal(null);
+  }
+
+  function saveQuickHolding(companyName: string, netDividend: number, payDate: string) {
+    const existing = snapshot?.holdings.find((holding) => holding.name.trim().toLocaleLowerCase("de-DE") === companyName.toLocaleLowerCase("de-DE"));
+    const now = new Date();
+    const timestamp = now.toISOString();
+    const holdingId = existing?.id ?? crypto.randomUUID();
+    const newHolding: Holding = {
+      id: holdingId,
+      name: companyName,
+      ticker: "",
+      isin: "",
+      quantity: 0,
+      purchasePrice: 0,
+      currentPrice: 0,
+      annualDividendPerShare: 0,
+      frequency: "Jährlich",
+      sector: "Nicht zugeordnet",
+      account: "Schneller Eintrag",
+      createdAt: timestamp,
+    };
+    const payment: Payment = {
+      id: crypto.randomUUID(),
+      holdingId,
+      companyName: existing?.name ?? companyName,
+      exDate: "",
+      payDate,
+      gross: netDividend,
+      tax: 0,
+      status: "Erhalten",
+      note: "Schneller Eintrag · Nettobetrag",
+      createdAt: timestamp,
+    };
+
+    mutate((current) => ({
+      ...current,
+      holdings: existing ? current.holdings : [...current.holdings, newHolding],
+      payments: [...current.payments, payment],
+    }), existing ? "Dividende zur bestehenden Position hinzugefügt" : "Position und Dividende hinzugefügt");
     setModal(null);
   }
 
@@ -417,7 +538,7 @@ export default function TrackerApp() {
 
       <nav className="mobile-nav" aria-label="Mobile Navigation">{navItems.map((item) => <button key={item.id} className={view === item.id ? "active" : ""} onClick={() => setView(item.id)}><span>{item.icon}</span>{item.label}</button>)}</nav>
 
-      {modal && <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label={modal.kind === "holding" ? "Position bearbeiten" : "Zahlung bearbeiten"}>{modal.kind === "holding" ? <HoldingForm item={modal.item} onCancel={() => setModal(null)} onSave={saveHolding} /> : <PaymentForm item={modal.item} holdings={snapshot.holdings} onCancel={() => setModal(null)} onSave={savePayment} />}</div>}
+      {modal && <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label={modal.kind === "holding" ? modal.item ? "Position bearbeiten" : "Position anlegen" : modal.item ? "Zahlung bearbeiten" : "Zahlung anlegen"}>{modal.kind === "holding" ? <HoldingForm item={modal.item} currency={currency} onCancel={() => setModal(null)} onSave={saveHolding} onQuickSave={saveQuickHolding} /> : <PaymentForm item={modal.item} holdings={snapshot.holdings} onCancel={() => setModal(null)} onSave={savePayment} />}</div>}
       {toast && <div className="toast"><span>✓</span>{toast}</div>}
     </div>
   );

@@ -20,6 +20,7 @@ test("renders the finished dividend tracker shell", async () => {
   const html = await response.text();
   assert.match(html, /Dividendenfluss/);
   assert.match(html, /dein lokaler Dividendentracker/);
+  assert.match(html, /favicon\.png\?v=3/);
   assert.doesNotMatch(html, /codex-preview|Starter Project|Your site is taking shape/i);
 });
 
@@ -37,4 +38,14 @@ test("keeps personal data in the browser and repository-safe", async () => {
   assert.match(gitignore, /\/\.runtime\//);
   assert.match(gitignore, /\.launcher\/legacy-shortcuts/);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
+});
+
+test("offers quick dividend entry and full portfolio details", async () => {
+  const tracker = await readFile(new URL("../app/tracker-app.tsx", import.meta.url), "utf8");
+  assert.match(tracker, /Schneller Eintrag/);
+  assert.match(tracker, /Portfolio-Details/);
+  assert.match(tracker, /Eingegangene Dividende \(netto/);
+  assert.match(tracker, /Zahltag<input name="payDate" type="date"/);
+  assert.match(tracker, /status: "Erhalten"/);
+  assert.match(tracker, /payDate,/);
 });
