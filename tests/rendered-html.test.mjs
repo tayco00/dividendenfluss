@@ -34,5 +34,7 @@ test("keeps personal data in the browser and repository-safe", async () => {
   assert.deepEqual(JSON.parse(hosting), { d1: null, r2: null });
   assert.match(gitignore, /dividenden-backup/);
   assert.match(gitignore, /portfolio-export/);
+  assert.match(gitignore, /\/\.runtime\//);
+  assert.match(gitignore, /\.launcher\/legacy-shortcuts/);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
 });

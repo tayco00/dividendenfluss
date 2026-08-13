@@ -55,3 +55,10 @@ dividenden-export-*.csv
 /dev.stderr.log
 /.tmp-spreadsheet/
 *.tsbuildinfo
+
+# Windows launcher: publish only portable app files, never machine-specific state
+/.runtime/
+/.launcher/legacy-shortcuts/
+/.launcher/*-source.png
+/.launcher/*-preview.png
+/.launcher/*.lnk

@@ -10,6 +10,7 @@ Ein moderner, datensparsamer Dividendentracker. Portfolio, Ausschüttungen und E
 - vollständige lokale JSON-Backups und Wiederherstellung
 - responsive Oberfläche mit hellem und dunklem Farbschema
 - Beispieldaten für den Einstieg, mit einem Klick vollständig entfernbar
+- Windows-Programm mit eigenem App-Symbol und Infobereich-Menü
 
 ## Datenschutz
 
@@ -17,11 +18,17 @@ Es existiert keine serverseitige Datenbank und kein Benutzerkonto. Persönliche 
 
 Wichtig: Browserdaten gehören zum jeweiligen Browserprofil. Vor dem Löschen von Browserdaten oder einem Gerätewechsel sollte ein JSON-Backup unter **Daten & Schutz** erstellt werden.
 
+## Windows-Programm
+
+Die fertige Anwendung liegt unter `.launcher/Dividendenfluss.exe`. Ein Doppelklick startet den lokalen Dienst unsichtbar, öffnet den Tracker im Standardbrowser und zeigt das Dividendenfluss-Symbol im Windows-Infobereich. Dort stehen per Rechtsklick **Dividendenfluss öffnen** und **Beenden** bereit.
+
+Die Desktop-Verknüpfung ist bewusst nicht im Repository enthalten, weil sie einen gerätespezifischen absoluten Pfad verwendet. Die EXE selbst arbeitet ausschließlich mit relativen Pfaden und enthält keine Portfolio- oder Zahlungsdaten.
+
 ## Unterstützte CSV-Spalten
 
 Für Positionen werden unter anderem `Wertpapier`, `Ticker`, `ISIN`, `Stückzahl`, `Kaufkurs`, `Aktueller Kurs`, `Dividende je Aktie`, `Häufigkeit`, `Sektor` und `Depot` erkannt. Für Zahlungen werden `Wertpapier`, `Ex-Tag`, `Zahltag`, `Brutto`, `Steuer`, `Netto`, `Status` und `Notiz` erkannt. Die vorhandene Struktur `Jahr 2026` / `Dividenden` / `Unternehmen` wird ebenfalls direkt unterstützt; leere Monatszellen übernehmen automatisch den zuletzt genannten Monat. Gängige Alternativbezeichnungen werden automatisch zugeordnet.
 
-## Lokal starten
+## Alternativ über die Konsole starten
 
 Voraussetzung ist Node.js 22 oder neuer.
 
