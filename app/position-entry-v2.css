@@ -1,0 +1,118 @@
+.entry-choice-intro {
+  margin: -6px 0 20px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.65;
+}
+
+.entry-choice-grid {
+  display: grid;
+  gap: 11px;
+}
+
+.entry-choice {
+  position: relative;
+  width: 100%;
+  min-height: 83px;
+  padding: 15px;
+  display: grid;
+  grid-template-columns: 43px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 13px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  color: var(--ink);
+  background: var(--surface-soft);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 140ms, transform 140ms, background 140ms;
+}
+
+.entry-choice:hover {
+  border-color: color-mix(in srgb, var(--lime-deep) 70%, var(--line));
+  background: color-mix(in srgb, var(--lime) 7%, var(--surface));
+  transform: translateY(-1px);
+}
+
+.entry-choice.recommended {
+  border-color: color-mix(in srgb, var(--lime-deep) 48%, var(--line));
+}
+
+.entry-choice-icon {
+  width: 43px;
+  height: 43px;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  color: #172014;
+  background: var(--lime);
+  font-size: 20px;
+  font-weight: 780;
+}
+
+.entry-choice-icon.details {
+  color: var(--teal);
+  background: color-mix(in srgb, var(--teal) 10%, var(--surface));
+}
+
+.entry-choice > span:nth-child(2) {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+}
+
+.entry-choice strong {
+  font-size: 12px;
+}
+
+.entry-choice small {
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.entry-choice i {
+  padding: 5px 7px;
+  border-radius: 5px;
+  color: #34451f;
+  background: color-mix(in srgb, var(--lime) 35%, transparent);
+  font-size: 7px;
+  font-style: normal;
+  font-weight: 760;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+}
+
+.quick-entry-fields {
+  margin-top: 4px;
+}
+
+.modal-actions.split-actions {
+  justify-content: space-between;
+}
+
+.modal-actions > div {
+  display: flex;
+  gap: 9px;
+}
+
+@media (max-width: 470px) {
+  .entry-choice {
+    grid-template-columns: 40px minmax(0, 1fr);
+  }
+
+  .entry-choice > i {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .modal-actions.split-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .modal-actions > div {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+}

@@ -41,11 +41,17 @@ test("keeps personal data in the browser and repository-safe", async () => {
 });
 
 test("offers quick dividend entry and full portfolio details", async () => {
-  const tracker = await readFile(new URL("../app/tracker-app.tsx", import.meta.url), "utf8");
+  const [tracker, layout, entryStyles] = await Promise.all([
+    readFile(new URL("../app/tracker-app.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/position-entry-v2.css", import.meta.url), "utf8"),
+  ]);
   assert.match(tracker, /Schneller Eintrag/);
   assert.match(tracker, /Portfolio-Details/);
   assert.match(tracker, /Eingegangene Dividende \(netto/);
   assert.match(tracker, /Zahltag<input name="payDate" type="date"/);
   assert.match(tracker, /status: "Erhalten"/);
   assert.match(tracker, /payDate,/);
+  assert.match(layout, /position-entry-v2\.css/);
+  assert.match(entryStyles, /\.entry-choice\s*\{[\s\S]*display: grid/);
 });
