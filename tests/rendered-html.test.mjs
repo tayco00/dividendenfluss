@@ -55,3 +55,18 @@ test("offers quick dividend entry and full portfolio details", async () => {
   assert.match(layout, /position-entry-v2\.css/);
   assert.match(entryStyles, /\.entry-choice\s*\{[\s\S]*display: grid/);
 });
+
+test("provides readable text sizes as a local preference", async () => {
+  const [tracker, layout, typography] = await Promise.all([
+    readFile(new URL("../app/tracker-app.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/typography.css", import.meta.url), "utf8"),
+  ]);
+  assert.match(tracker, /Textgröße/);
+  assert.match(tracker, /Kompakt/);
+  assert.match(tracker, /Standard/);
+  assert.match(tracker, /Groß/);
+  assert.match(layout, /typography\.css/);
+  assert.match(typography, /data-text-size="large"/);
+  assert.match(typography, /--text-body: 14px/);
+});

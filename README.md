@@ -9,6 +9,7 @@ Ein moderner, datensparsamer Dividendentracker. Portfolio, Ausschüttungen und E
 - direkter Excel-/CSV-Import mit deutschen Spaltenbezeichnungen und CSV-Export
 - vollständige lokale JSON-Backups und Wiederherstellung
 - responsive Oberfläche mit hellem und dunklem Farbschema
+- einstellbare Textgröße mit lesbarer Standarddarstellung
 - Beispieldaten für den Einstieg, mit einem Klick vollständig entfernbar
 - Windows-Programm mit eigenem App-Symbol und Infobereich-Menü
 

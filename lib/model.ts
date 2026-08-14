@@ -1,5 +1,6 @@
 export type Frequency = "Monatlich" | "Quartalsweise" | "Halbjährlich" | "Jährlich";
 export type PaymentStatus = "Geplant" | "Erhalten";
+export type TextSize = "compact" | "standard" | "large";
 
 export type Holding = {
   id: string;
@@ -35,6 +36,7 @@ export type AppSettings = {
   currency: "EUR" | "USD" | "CHF" | "GBP";
   annualGoal: number;
   theme: "light" | "dark";
+  textSize: TextSize;
 };
 
 export type Snapshot = {
@@ -125,7 +127,7 @@ export function createDemoSnapshot(): Snapshot {
     version: 1,
     holdings,
     payments,
-    settings: { currency: "EUR", annualGoal: 1200, theme: "light" },
+    settings: { currency: "EUR", annualGoal: 1200, theme: "light", textSize: "standard" },
     updatedAt: now,
   };
 }
@@ -135,7 +137,18 @@ export function createEmptySnapshot(settings?: AppSettings): Snapshot {
     version: 1,
     holdings: [],
     payments: [],
-    settings: settings ?? { currency: "EUR", annualGoal: 1200, theme: "light" },
+    settings: settings ?? { currency: "EUR", annualGoal: 1200, theme: "light", textSize: "standard" },
     updatedAt: new Date().toISOString(),
+  };
+}
+
+export function normalizeSnapshot(snapshot: Snapshot): Snapshot {
+  const settings = snapshot.settings as AppSettings & { textSize?: TextSize };
+  return {
+    ...snapshot,
+    settings: {
+      ...settings,
+      textSize: settings.textSize ?? "standard",
+    },
   };
 }

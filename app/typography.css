@@ -1,0 +1,121 @@
+:root,
+:root[data-text-size="standard"] {
+  --text-micro: 10px;
+  --text-small: 11px;
+  --text-body: 12px;
+  --text-control: 13px;
+}
+
+:root[data-text-size="compact"] {
+  --text-micro: 8px;
+  --text-small: 9px;
+  --text-body: 10px;
+  --text-control: 11px;
+}
+
+:root[data-text-size="large"] {
+  --text-micro: 12px;
+  --text-small: 13px;
+  --text-body: 14px;
+  --text-control: 15px;
+}
+
+body {
+  font-size: var(--text-body);
+}
+
+.demo-banner div > span,
+.trend-chip,
+.hero-bottom span,
+.metric-card > span,
+.bar-value,
+.bar-column > span,
+.goal-ring span,
+.goal-copy small,
+.company-copy small,
+.payment-amount small,
+.demo-tag,
+th,
+.data-action small,
+.field small,
+.mobile-nav button,
+.entry-choice i {
+  font-size: var(--text-micro);
+}
+
+.nav-label,
+.privacy-card p,
+.sidebar-footer,
+.eyebrow,
+.hero-top,
+.chart-legend,
+.goal-copy > span,
+.company-avatar,
+.allocation-list > div,
+.summary-inline span,
+.segmented button,
+.asset-cell small,
+.yield-chip,
+.status-chip,
+.row-actions button,
+.payment-summary span,
+.empty-state.small p,
+.privacy-feature ul,
+.settings-intro,
+.data-action strong,
+.danger-card p,
+.field,
+.entry-choice-intro,
+.entry-choice small {
+  font-size: var(--text-small);
+}
+
+.local-pill,
+.button,
+.demo-banner strong,
+.demo-banner p,
+.metric-card p,
+.text-button,
+.year-switch strong,
+.company-copy strong,
+.payment-amount strong,
+.allocation-list strong,
+.search-box input,
+td,
+td > strong,
+.asset-cell strong,
+.empty-state p,
+.empty-inline,
+.privacy-feature p,
+.toast,
+.loading-screen p,
+.entry-choice strong {
+  font-size: var(--text-body);
+}
+
+.sidebar nav button,
+.field input,
+.field select {
+  font-size: var(--text-control);
+}
+
+.text-size-control button {
+  min-width: 0;
+}
+
+@media (max-width: 470px) {
+  :root,
+  :root[data-text-size="standard"] {
+    --text-micro: 9px;
+    --text-small: 10px;
+    --text-body: 11px;
+    --text-control: 12px;
+  }
+
+  :root[data-text-size="large"] {
+    --text-micro: 11px;
+    --text-small: 12px;
+    --text-body: 13px;
+    --text-control: 14px;
+  }
+}

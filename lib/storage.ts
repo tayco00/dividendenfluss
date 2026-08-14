@@ -1,4 +1,4 @@
-import type { Snapshot } from "./model";
+import { normalizeSnapshot, type Snapshot } from "./model";
 
 const DB_NAME = "dividendenfluss-local";
 const STORE_NAME = "snapshots";
@@ -23,7 +23,10 @@ export async function loadSnapshot(): Promise<Snapshot | null> {
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(STORE_NAME, "readonly");
     const request = transaction.objectStore(STORE_NAME).get(SNAPSHOT_KEY);
-    request.onsuccess = () => resolve((request.result as Snapshot | undefined) ?? null);
+    request.onsuccess = () => {
+      const snapshot = request.result as Snapshot | undefined;
+      resolve(snapshot ? normalizeSnapshot(snapshot) : null);
+    };
     request.onerror = () => reject(request.error);
     transaction.oncomplete = () => db.close();
   });
