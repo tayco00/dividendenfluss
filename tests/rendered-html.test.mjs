@@ -41,6 +41,13 @@ test("keeps personal data in the browser and repository-safe", async () => {
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
 });
 
+test("names the Windows application Dividendenfluss", async () => {
+  const launcher = await readFile(new URL("../.launcher/Launcher.cs", import.meta.url), "utf8");
+  assert.match(launcher, /AssemblyTitle\("Dividendenfluss"\)/);
+  assert.match(launcher, /AssemblyDescription\("Dividendenfluss"\)/);
+  assert.match(launcher, /AssemblyProduct\("Dividendenfluss"\)/);
+});
+
 test("offers quick dividend entry and full portfolio details", async () => {
   const [tracker, layout, entryStyles] = await Promise.all([
     readFile(new URL("../app/tracker-app.tsx", import.meta.url), "utf8"),

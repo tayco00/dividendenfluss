@@ -3,8 +3,15 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Net;
+using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
+
+[assembly: AssemblyTitle("Dividendenfluss")]
+[assembly: AssemblyDescription("Dividendenfluss")]
+[assembly: AssemblyProduct("Dividendenfluss")]
+[assembly: AssemblyVersion("1.0.0.0")]
+[assembly: AssemblyFileVersion("1.0.0.0")]
 
 internal static class Program
 {
