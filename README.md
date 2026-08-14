@@ -6,6 +6,7 @@ Ein moderner, datensparsamer Dividendentracker. Portfolio, Ausschüttungen und E
 
 - Dashboard für Netto-Dividenden, Portfoliowert, Rendite, Monatsverlauf und Jahresziel
 - Positionen und Zahlungen anlegen, bearbeiten, suchen, filtern und löschen
+- standardisierte Sektorauswahl mit Erhalt bereits importierter Bezeichnungen
 - direkter Excel-/CSV-Import mit deutschen Spaltenbezeichnungen und CSV-Export
 - vollständige lokale JSON-Backups und Wiederherstellung
 - responsive Oberfläche mit hellem und dunklem Farbschema

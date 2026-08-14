@@ -57,6 +57,16 @@ test("offers quick dividend entry and full portfolio details", async () => {
   assert.match(entryStyles, /\.entry-choice\s*\{[\s\S]*display: grid/);
 });
 
+test("offers standardized sectors without dropping existing labels", async () => {
+  const tracker = await readFile(new URL("../app/tracker-app.tsx", import.meta.url), "utf8");
+  assert.match(tracker, /const sectorOptions = \[/);
+  assert.match(tracker, /Informationstechnologie/);
+  assert.match(tracker, /Kommunikationsdienste/);
+  assert.match(tracker, /<select name="sector"/);
+  assert.match(tracker, /hasCustomSector/);
+  assert.doesNotMatch(tracker, /Sektor<input name="sector"/);
+});
+
 test("provides readable text sizes as a local preference", async () => {
   const [tracker, layout, typography] = await Promise.all([
     readFile(new URL("../app/tracker-app.tsx", import.meta.url), "utf8"),

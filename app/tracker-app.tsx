@@ -37,6 +37,21 @@ const navItems: { id: View; label: string; icon: string }[] = [
 
 const months = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"];
 
+const sectorOptions = [
+  "Nicht zugeordnet",
+  "Energie",
+  "Grundstoffe",
+  "Industrie",
+  "Zyklischer Konsum",
+  "Basiskonsum",
+  "Gesundheit",
+  "Finanzwesen",
+  "Informationstechnologie",
+  "Kommunikationsdienste",
+  "Versorger",
+  "Immobilien",
+] as const;
+
 function formatMoney(value: number, currency: AppSettings["currency"], compact = false) {
   return new Intl.NumberFormat("de-DE", {
     style: "currency",
@@ -104,6 +119,11 @@ function HoldingForm({
 }) {
   const [mode, setMode] = useState<"quick" | "details" | null>(item ? "details" : null);
   const [frequency, setFrequency] = useState<Frequency>(item?.frequency ?? "Quartalsweise");
+  const existingSector = item?.sector?.trim();
+  const hasCustomSector = Boolean(existingSector && !sectorOptions.some((sector) => sector === existingSector));
+  const availableSectors = hasCustomSector && existingSector
+    ? [existingSector, ...sectorOptions]
+    : [...sectorOptions];
 
   function submitDetails(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -200,7 +220,7 @@ function HoldingForm({
         <label className="field">Aktueller Kurs<input name="currentPrice" defaultValue={item?.currentPrice} type="number" min="0" step="0.01" required /></label>
         <label className="field">Dividende je Aktie p. a.<input name="annualDividendPerShare" defaultValue={item?.annualDividendPerShare} type="number" min="0" step="0.001" required /></label>
         <label className="field">Häufigkeit<select value={frequency} onChange={(event) => setFrequency(event.target.value as Frequency)}>{["Monatlich", "Quartalsweise", "Halbjährlich", "Jährlich"].map((value) => <option key={value}>{value}</option>)}</select></label>
-        <label className="field">Sektor<input name="sector" defaultValue={item?.sector} placeholder="z. B. Versicherungen" /></label>
+        <label className="field">Sektor<select name="sector" defaultValue={existingSector || "Nicht zugeordnet"}>{availableSectors.map((sector) => <option key={sector} value={sector}>{sector}{hasCustomSector && sector === existingSector ? " (vorhanden)" : ""}</option>)}</select></label>
         <label className="field wide">Depot / Konto<input name="account" defaultValue={item?.account} placeholder="Hauptdepot" /></label>
       </div>
       <div className={`modal-actions ${item ? "" : "split-actions"}`}>
