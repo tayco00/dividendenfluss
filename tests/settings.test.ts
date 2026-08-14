@@ -3,7 +3,9 @@ import test from "node:test";
 import { createEmptySnapshot, normalizeSnapshot, type Snapshot } from "../lib/model";
 
 test("uses the readable standard size for new data", () => {
-  assert.equal(createEmptySnapshot().settings.textSize, "standard");
+  const settings = createEmptySnapshot().settings;
+  assert.equal(settings.textSize, "standard");
+  assert.equal(settings.startView, "dashboard");
 });
 
 test("adds the standard size to existing local snapshots", () => {
@@ -19,6 +21,13 @@ test("adds the standard size to existing local snapshots", () => {
 
   const normalized = normalizeSnapshot(legacy);
   assert.equal(normalized.settings.textSize, "standard");
+  assert.equal(normalized.settings.startView, "dashboard");
   assert.deepEqual(normalized.holdings, legacy.holdings);
   assert.deepEqual(normalized.payments, legacy.payments);
+});
+
+test("preserves a chosen start view", () => {
+  const snapshot = createEmptySnapshot();
+  snapshot.settings.startView = "payments";
+  assert.equal(normalizeSnapshot(snapshot).settings.startView, "payments");
 });

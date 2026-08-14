@@ -44,8 +44,6 @@ th,
 }
 
 .nav-label,
-.privacy-card p,
-.sidebar-footer,
 .eyebrow,
 .hero-top,
 .chart-legend,
@@ -60,7 +58,6 @@ th,
 .row-actions button,
 .payment-summary span,
 .empty-state.small p,
-.privacy-feature ul,
 .settings-intro,
 .data-action strong,
 .danger-card p,
@@ -70,7 +67,6 @@ th,
   font-size: var(--text-small);
 }
 
-.local-pill,
 .button,
 .demo-banner strong,
 .demo-banner p,
@@ -86,7 +82,6 @@ td > strong,
 .asset-cell strong,
 .empty-state p,
 .empty-inline,
-.privacy-feature p,
 .toast,
 .loading-screen p,
 .entry-choice strong {

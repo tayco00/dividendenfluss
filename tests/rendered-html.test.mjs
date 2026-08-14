@@ -21,6 +21,7 @@ test("renders the finished dividend tracker shell", async () => {
   assert.match(html, /Dividendenfluss/);
   assert.match(html, /dein lokaler Dividendentracker/);
   assert.match(html, /favicon\.png\?v=3/);
+  assert.doesNotMatch(html, /100 % lokal|Lokal gespeichert|Nur auf diesem Gerät|Daten & Schutz/);
   assert.doesNotMatch(html, /codex-preview|Starter Project|Your site is taking shape/i);
 });
 
@@ -66,6 +67,9 @@ test("provides readable text sizes as a local preference", async () => {
   assert.match(tracker, /Kompakt/);
   assert.match(tracker, /Standard/);
   assert.match(tracker, /Groß/);
+  assert.match(tracker, /Einstellungen/);
+  assert.match(tracker, /Startansicht/);
+  assert.doesNotMatch(tracker, /DATENSOUVERÄNITÄT|Deine Zahlen verlassen dieses Gerät nicht|100 % lokal|Lokal gespeichert|Nur auf diesem Gerät|Daten & Schutz/);
   assert.match(layout, /typography\.css/);
   assert.match(typography, /data-text-size="large"/);
   assert.match(typography, /--text-body: 14px/);

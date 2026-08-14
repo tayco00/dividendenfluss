@@ -1,6 +1,7 @@
 export type Frequency = "Monatlich" | "Quartalsweise" | "Halbjährlich" | "Jährlich";
 export type PaymentStatus = "Geplant" | "Erhalten";
 export type TextSize = "compact" | "standard" | "large";
+export type StartView = "dashboard" | "portfolio" | "payments";
 
 export type Holding = {
   id: string;
@@ -37,6 +38,7 @@ export type AppSettings = {
   annualGoal: number;
   theme: "light" | "dark";
   textSize: TextSize;
+  startView: StartView;
 };
 
 export type Snapshot = {
@@ -127,7 +129,7 @@ export function createDemoSnapshot(): Snapshot {
     version: 1,
     holdings,
     payments,
-    settings: { currency: "EUR", annualGoal: 1200, theme: "light", textSize: "standard" },
+    settings: { currency: "EUR", annualGoal: 1200, theme: "light", textSize: "standard", startView: "dashboard" },
     updatedAt: now,
   };
 }
@@ -137,18 +139,19 @@ export function createEmptySnapshot(settings?: AppSettings): Snapshot {
     version: 1,
     holdings: [],
     payments: [],
-    settings: settings ?? { currency: "EUR", annualGoal: 1200, theme: "light", textSize: "standard" },
+    settings: settings ?? { currency: "EUR", annualGoal: 1200, theme: "light", textSize: "standard", startView: "dashboard" },
     updatedAt: new Date().toISOString(),
   };
 }
 
 export function normalizeSnapshot(snapshot: Snapshot): Snapshot {
-  const settings = snapshot.settings as AppSettings & { textSize?: TextSize };
+  const settings = snapshot.settings as AppSettings & { textSize?: TextSize; startView?: StartView };
   return {
     ...snapshot,
     settings: {
       ...settings,
       textSize: settings.textSize ?? "standard",
+      startView: settings.startView ?? "dashboard",
     },
   };
 }

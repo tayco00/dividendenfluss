@@ -17,7 +17,7 @@ Ein moderner, datensparsamer Dividendentracker. Portfolio, Ausschüttungen und E
 
 Es existiert keine serverseitige Datenbank und kein Benutzerkonto. Persönliche Einträge werden weder an den Server übertragen noch in Git geschrieben. Export- und Backup-Dateien sind zusätzlich über `.gitignore` ausgeschlossen. Im Repository befinden sich ausschließlich als Demo gekennzeichnete Beispieldaten.
 
-Wichtig: Browserdaten gehören zum jeweiligen Browserprofil. Vor dem Löschen von Browserdaten oder einem Gerätewechsel sollte ein JSON-Backup unter **Daten & Schutz** erstellt werden.
+Wichtig: Browserdaten gehören zum jeweiligen Browserprofil. Vor dem Löschen von Browserdaten oder einem Gerätewechsel sollte ein JSON-Backup unter **Einstellungen** erstellt werden.
 
 ## Windows-Programm
 

@@ -32,7 +32,7 @@ const navItems: { id: View; label: string; icon: string }[] = [
   { id: "dashboard", label: "Übersicht", icon: "⌂" },
   { id: "portfolio", label: "Portfolio", icon: "▦" },
   { id: "payments", label: "Zahlungen", icon: "↗" },
-  { id: "settings", label: "Daten & Schutz", icon: "◉" },
+  { id: "settings", label: "Einstellungen", icon: "⚙" },
 ];
 
 const months = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"];
@@ -267,8 +267,16 @@ export default function TrackerApp() {
 
   useEffect(() => {
     loadSnapshot()
-      .then((saved) => setSnapshot(saved ?? createDemoSnapshot()))
-      .catch(() => setSnapshot(createDemoSnapshot()));
+      .then((saved) => {
+        const initial = saved ?? createDemoSnapshot();
+        setSnapshot(initial);
+        setView(initial.settings.startView);
+      })
+      .catch(() => {
+        const initial = createDemoSnapshot();
+        setSnapshot(initial);
+        setView(initial.settings.startView);
+      });
   }, []);
 
   useEffect(() => {
@@ -447,21 +455,15 @@ export default function TrackerApp() {
           <span className="nav-label">TRACKER</span>
           {navItems.map((item) => <button key={item.id} className={view === item.id ? "active" : ""} onClick={() => { setView(item.id); setSearch(""); }}><span className="nav-icon">{item.icon}</span>{item.label}</button>)}
         </nav>
-        <div className="privacy-card">
-          <span className="privacy-icon">✓</span>
-          <div><strong>100 % lokal</strong><p>Keine Cloud. Kein Konto. Deine Daten bleiben hier.</p></div>
-        </div>
-        <div className="sidebar-footer"><span className="status-dot" /> Lokal gespeichert</div>
       </aside>
 
       <main className="main-content">
         <header className="topbar">
           <div>
-            <span className="eyebrow">{view === "dashboard" ? `PORTFOLIO · ${year}` : view === "portfolio" ? "DEINE POSITIONEN" : view === "payments" ? "DIVIDENDENKALENDER" : "LOCAL-FIRST"}</span>
-            <h1>{view === "dashboard" ? "Guten Tag, Investor." : view === "portfolio" ? "Portfolio" : view === "payments" ? "Zahlungen" : "Daten & Schutz"}</h1>
+            <span className="eyebrow">{view === "dashboard" ? `PORTFOLIO · ${year}` : view === "portfolio" ? "DEINE POSITIONEN" : view === "payments" ? "DIVIDENDENKALENDER" : "DARSTELLUNG · DATEN · VERHALTEN"}</span>
+            <h1>{view === "dashboard" ? "Guten Tag, Investor." : view === "portfolio" ? "Portfolio" : view === "payments" ? "Zahlungen" : "Einstellungen"}</h1>
           </div>
           <div className="topbar-actions">
-            <span className="local-pill"><span /> Nur auf diesem Gerät</span>
             {view !== "settings" && <button className="button lime" onClick={() => setModal({ kind: view === "payments" ? "payment" : "holding" })}><span>＋</span>{view === "payments" ? "Zahlung" : "Position"}</button>}
           </div>
         </header>
@@ -530,9 +532,18 @@ export default function TrackerApp() {
 
         {view === "settings" && (
           <div className="settings-grid">
-            <section className="settings-card privacy-feature"><div className="settings-icon shield">✓</div><div><span className="eyebrow">DATENSOUVERÄNITÄT</span><h2>Deine Zahlen verlassen dieses Gerät nicht.</h2><p>Der Tracker nutzt eine lokale Browserdatenbank. Es gibt keinen Login, kein Tracking und keine Übertragung deiner Portfolio- oder Zahlungsdaten an einen Server.</p><ul><li><span>✓</span> Speicherung nur im aktuellen Browser</li><li><span>✓</span> Kein Cloud-Konto erforderlich</li><li><span>✓</span> Backups nur auf deine Aktion</li></ul></div></section>
-            <section className="settings-card"><div className="settings-heading"><div><span className="eyebrow">DARSTELLUNG</span><h2>Tracker anpassen</h2></div><span className="settings-icon">◎</span></div><div className="settings-fields"><label className="field">Basiswährung<select value={snapshot.settings.currency} onChange={(event) => updateSettings({ currency: event.target.value as AppSettings["currency"] })}>{["EUR", "USD", "CHF", "GBP"].map((currencyCode) => <option key={currencyCode}>{currencyCode}</option>)}</select><small>Alle Werte werden in dieser Währung interpretiert.</small></label><label className="field">Netto-Jahresziel<input type="number" min="0" step="50" value={snapshot.settings.annualGoal} onChange={(event) => updateSettings({ annualGoal: Number(event.target.value) || 0 })} /></label><div className="field"><span>Farbschema</span><div className="segmented form-segmented"><button className={snapshot.settings.theme === "light" ? "active" : ""} onClick={() => updateSettings({ theme: "light" })}>Hell</button><button className={snapshot.settings.theme === "dark" ? "active" : ""} onClick={() => updateSettings({ theme: "dark" })}>Dunkel</button></div></div><div className="field"><span>Textgröße</span><div className="segmented form-segmented text-size-control">{([['compact', 'Kompakt'], ['standard', 'Standard'], ['large', 'Groß']] as const).map(([value, label]) => <button key={value} className={snapshot.settings.textSize === value ? "active" : ""} onClick={() => updateSettings({ textSize: value })}>{label}</button>)}</div><small>Passt kleine Beschriftungen, Tabellen und Bedienelemente sofort an.</small></div></div></section>
-            <section className="settings-card"><div className="settings-heading"><div><span className="eyebrow">SICHERN & ÜBERTRAGEN</span><h2>Import & Export</h2></div><span className="settings-icon">⇄</span></div><p className="settings-intro">Erstelle eine vollständige JSON-Sicherung oder tausche Tabellendaten per Excel/CSV aus. Dateien werden nur lokal verarbeitet.</p><div className="data-actions"><button className="data-action" onClick={exportBackup}><span className="data-icon">↓</span><span><strong>Vollständiges Backup</strong><small>Positionen, Zahlungen & Einstellungen · JSON</small></span><i>→</i></button><button className="data-action" onClick={() => downloadFile(holdingsToCsv(snapshot.holdings), `portfolio-export-${new Date().toISOString().slice(0, 10)}.csv`, "text/csv;charset=utf-8")}><span className="data-icon">▦</span><span><strong>Portfolio als CSV</strong><small>Kompatibel mit Tabellenprogrammen</small></span><i>→</i></button><button className="data-action" onClick={() => downloadFile(paymentsToCsv(snapshot.payments), `dividenden-export-${new Date().toISOString().slice(0, 10)}.csv`, "text/csv;charset=utf-8")}><span className="data-icon">↗</span><span><strong>Zahlungen als CSV</strong><small>Dein Dividendenjournal</small></span><i>→</i></button><button className="data-action" onClick={() => importRef.current?.click()}><span className="data-icon lime-icon">↑</span><span><strong>Datei importieren</strong><small>Excel, CSV oder Backup · nur lokal gelesen</small></span><i>→</i></button><input ref={importRef} className="sr-only" type="file" accept=".json,.csv,.xlsx,.xls,text/csv,application/json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" onChange={(event) => event.target.files?.[0] && importFile(event.target.files[0])} /></div></section>
+            <section className="settings-card settings-preferences">
+              <div className="settings-heading"><div><span className="eyebrow">DARSTELLUNG & VERHALTEN</span><h2>Tracker anpassen</h2></div><span className="settings-icon">◎</span></div>
+              <p className="settings-intro">Lege fest, wie der Tracker aussieht und welche Ansicht dich beim Öffnen begrüßt.</p>
+              <div className="settings-fields">
+                <label className="field">Basiswährung<select value={snapshot.settings.currency} onChange={(event) => updateSettings({ currency: event.target.value as AppSettings["currency"] })}>{["EUR", "USD", "CHF", "GBP"].map((currencyCode) => <option key={currencyCode}>{currencyCode}</option>)}</select><small>Alle Werte werden in dieser Währung interpretiert.</small></label>
+                <label className="field">Netto-Jahresziel<input type="number" min="0" step="50" value={snapshot.settings.annualGoal} onChange={(event) => updateSettings({ annualGoal: Number(event.target.value) || 0 })} /><small>Dein persönliches Ziel für erhaltene Netto-Dividenden.</small></label>
+                <div className="field"><span>Farbschema</span><div className="segmented form-segmented"><button className={snapshot.settings.theme === "light" ? "active" : ""} onClick={() => updateSettings({ theme: "light" })}>Hell</button><button className={snapshot.settings.theme === "dark" ? "active" : ""} onClick={() => updateSettings({ theme: "dark" })}>Dunkel</button></div></div>
+                <div className="field"><span>Textgröße</span><div className="segmented form-segmented text-size-control">{([['compact', 'Kompakt'], ['standard', 'Standard'], ['large', 'Groß']] as const).map(([value, label]) => <button key={value} className={snapshot.settings.textSize === value ? "active" : ""} onClick={() => updateSettings({ textSize: value })}>{label}</button>)}</div><small>Passt Beschriftungen, Tabellen und Bedienelemente sofort an.</small></div>
+                <div className="field wide"><span>Startansicht</span><div className="segmented form-segmented start-view-control">{([['dashboard', 'Übersicht'], ['portfolio', 'Portfolio'], ['payments', 'Zahlungen']] as const).map(([value, label]) => <button key={value} className={snapshot.settings.startView === value ? "active" : ""} onClick={() => updateSettings({ startView: value })}>{label}</button>)}</div><small>Diese Seite wird beim nächsten Öffnen zuerst angezeigt.</small></div>
+              </div>
+            </section>
+            <section className="settings-card settings-data-card"><div className="settings-heading"><div><span className="eyebrow">DATEN VERWALTEN</span><h2>Import & Export</h2></div><span className="settings-icon">⇄</span></div><p className="settings-intro">Erstelle eine vollständige JSON-Sicherung oder tausche Tabellendaten per Excel/CSV aus.</p><div className="data-actions"><button className="data-action" onClick={exportBackup}><span className="data-icon">↓</span><span><strong>Vollständiges Backup</strong><small>Positionen, Zahlungen & Einstellungen · JSON</small></span><i>→</i></button><button className="data-action" onClick={() => downloadFile(holdingsToCsv(snapshot.holdings), `portfolio-export-${new Date().toISOString().slice(0, 10)}.csv`, "text/csv;charset=utf-8")}><span className="data-icon">▦</span><span><strong>Portfolio als CSV</strong><small>Kompatibel mit Tabellenprogrammen</small></span><i>→</i></button><button className="data-action" onClick={() => downloadFile(paymentsToCsv(snapshot.payments), `dividenden-export-${new Date().toISOString().slice(0, 10)}.csv`, "text/csv;charset=utf-8")}><span className="data-icon">↗</span><span><strong>Zahlungen als CSV</strong><small>Dein Dividendenjournal</small></span><i>→</i></button><button className="data-action" onClick={() => importRef.current?.click()}><span className="data-icon lime-icon">↑</span><span><strong>Datei importieren</strong><small>Excel, CSV oder Backup</small></span><i>→</i></button><input ref={importRef} className="sr-only" type="file" accept=".json,.csv,.xlsx,.xls,text/csv,application/json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" onChange={(event) => event.target.files?.[0] && importFile(event.target.files[0])} /></div></section>
             <section className="settings-card danger-card"><div className="settings-heading"><div><span className="eyebrow">LOKALE DATEN</span><h2>Neu beginnen</h2></div><span className="settings-icon danger">!</span></div><p>Entfernt alle Positionen und Zahlungen aus diesem Browser. Erstelle vorher bei Bedarf ein Backup.</p><button className="button danger-button" onClick={() => { if (window.confirm("Alle lokal gespeicherten Portfolio- und Zahlungsdaten unwiderruflich löschen?")) { setSnapshot(createEmptySnapshot(snapshot.settings)); setToast("Lokale Daten gelöscht"); } }}>Alle lokalen Daten löschen</button></section>
           </div>
         )}
