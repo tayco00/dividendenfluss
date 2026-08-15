@@ -35,6 +35,9 @@ yarn-error.log*
 .vercel
 
 /dist/
+/desktop-dist/
+/desktop-release/
+/Dividendenfluss.exe
 /.wrangler/
 /outputs/
 /work/
@@ -56,7 +59,7 @@ dividenden-export-*.csv
 /.tmp-spreadsheet/
 *.tsbuildinfo
 
-# Windows launcher: publish only portable app files, never machine-specific state
+# Windows app: publish only source files, never machine-specific state
 /.runtime/
 /.launcher/legacy-shortcuts/
 /.launcher/*-source.png

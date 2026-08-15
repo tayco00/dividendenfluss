@@ -41,11 +41,18 @@ test("keeps personal data in the browser and repository-safe", async () => {
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
 });
 
-test("names the Windows application Dividendenfluss", async () => {
-  const launcher = await readFile(new URL("../.launcher/Launcher.cs", import.meta.url), "utf8");
-  assert.match(launcher, /AssemblyTitle\("Dividendenfluss"\)/);
-  assert.match(launcher, /AssemblyDescription\("Dividendenfluss"\)/);
-  assert.match(launcher, /AssemblyProduct\("Dividendenfluss"\)/);
+test("opens Dividendenfluss in a dedicated Windows application window", async () => {
+  const [desktopMain, packageJson, gitignore] = await Promise.all([
+    readFile(new URL("../desktop/main.mjs", import.meta.url), "utf8"),
+    readFile(new URL("../package.json", import.meta.url), "utf8"),
+    readFile(new URL("../.gitignore", import.meta.url), "utf8"),
+  ]);
+  assert.match(desktopMain, /new BrowserWindow/);
+  assert.match(desktopMain, /title: "Dividendenfluss"/);
+  assert.match(desktopMain, /Menu\.setApplicationMenu\(null\)/);
+  assert.match(desktopMain, /dividendenfluss:\/\/app\/index\.html/);
+  assert.match(packageJson, /"artifactName": "Dividendenfluss\.\$\{ext\}"/);
+  assert.match(gitignore, /\/Dividendenfluss\.exe/);
 });
 
 test("offers quick dividend entry and full portfolio details", async () => {

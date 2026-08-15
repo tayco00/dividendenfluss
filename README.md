@@ -22,7 +22,9 @@ Wichtig: Browserdaten gehören zum jeweiligen Browserprofil. Vor dem Löschen vo
 
 ## Windows-Programm
 
-Die fertige Anwendung liegt unter `.launcher/Dividendenfluss.exe`. Ein Doppelklick startet den lokalen Dienst unsichtbar, öffnet den Tracker im Standardbrowser und zeigt das Dividendenfluss-Symbol im Windows-Infobereich. Dort stehen per Rechtsklick **Dividendenfluss öffnen** und **Beenden** bereit.
+Die fertige portable Anwendung liegt als `Dividendenfluss.exe` im Projektordner. Ein Doppelklick öffnet den Tracker in einem eigenen Programmfenster – ohne Browserleiste, Tabs oder separat laufenden lokalen Dienst. Einträge und Einstellungen bleiben in der lokalen Programmdatenbank auf diesem Gerät.
+
+Bereits in der früheren Browser-Version gespeicherte Einträge werden nicht gelöscht. Für die einmalige Übernahme zuerst dort unter **Einstellungen** ein vollständiges Backup erstellen und dieses anschließend im neuen Programm importieren.
 
 Die Desktop-Verknüpfung ist bewusst nicht im Repository enthalten, weil sie einen gerätespezifischen absoluten Pfad verwendet. Die EXE selbst arbeitet ausschließlich mit relativen Pfaden und enthält keine Portfolio- oder Zahlungsdaten.
 

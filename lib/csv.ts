@@ -94,7 +94,7 @@ export function rowsToPayments(rows: CsvRow[], holdings: Holding[]): Payment[] {
     oktober: "10", november: "11", dezember: "12",
   };
   let inheritedMonth = "";
-  return rows.map((row) => {
+  return rows.map<Payment | null>((row) => {
     const companyName = get(row, ["Wertpapier", "Name", "Unternehmen", "Aktie"]);
     const match = holdings.find((holding) => normalize(holding.name) === normalize(companyName));
     const statusValue = normalize(get(row, ["Status"]));
