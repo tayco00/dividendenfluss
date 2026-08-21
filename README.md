@@ -35,7 +35,7 @@ Desktop-Verknüpfung, installierte Programmdateien, Fensterstatus und lokale Dat
 
 Die installierte App prüft beim Start, auf Wunsch in den **Einstellungen** und während längerer Laufzeit nach neuen GitHub-Releases. Ein gefundenes Update wird mit der von `electron-builder` erzeugten Prüfsumme kontrolliert, heruntergeladen und nach Zustimmung beziehungsweise beim nächsten Start installiert. Wenn GitHub nicht erreichbar ist, startet Dividendenfluss ohne Einschränkung weiter.
 
-Ein Tag wie `v0.2.0` löst die geprüfte Windows-Paketierung aus und veröffentlicht Installer, Blockmap und `latest.yml` gemeinsam. Dadurch stammen Programmdatei und Integritätsinformationen immer aus demselben Build.
+Ein Tag wie `v0.2.1` löst die geprüfte Windows-Paketierung aus und veröffentlicht Installer, Blockmap und `latest.yml` gemeinsam. Dadurch stammen Programmdatei und Integritätsinformationen immer aus demselben Build.
 
 ## Unterstützte CSV-Spalten
 

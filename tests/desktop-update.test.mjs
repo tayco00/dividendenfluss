@@ -14,7 +14,8 @@ const [main, preload, updater, startup, windowState, workflow, tracker] = await 
 ]);
 
 test("ships an installable GitHub update channel", () => {
-  assert.equal(packageJson.version, "0.2.0");
+  assert.equal(packageJson.version, "0.2.1");
+  assert.match(packageJson.scripts["desktop:package"], /--publish never/);
   assert.equal(packageJson.dependencies["electron-updater"], "^6.8.9");
   assert.match(packageJson.dependencies.xlsx, /xlsx-0\.20\.3/);
   assert.equal(packageJson.build.win.target, "nsis");

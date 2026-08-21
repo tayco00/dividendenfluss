@@ -1,6 +1,6 @@
 {
   "name": "dividendenfluss",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Dividendenfluss",
   "private": true,
   "main": "desktop/main.mjs",
@@ -12,7 +12,7 @@
     "build": "vinext build",
     "start": "vinext start",
     "desktop:build": "tsc --noEmit -p tsconfig.desktop.json && vite build --config desktop.vite.config.ts",
-    "desktop:package": "npm run desktop:build && electron-builder --win nsis --x64",
+    "desktop:package": "npm run desktop:build && electron-builder --win nsis --x64 --publish never",
     "test": "npm run build && node --import tsx --test tests/rendered-html.test.mjs tests/desktop-update.test.mjs tests/csv-legacy.test.ts tests/settings.test.ts tests/profiles.test.ts",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern desktop-dist --ignore-pattern desktop-release --ignore-pattern .next",
     "db:generate": "drizzle-kit generate"
