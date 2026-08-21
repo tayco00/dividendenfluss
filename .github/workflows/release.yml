@@ -1,0 +1,64 @@
+name: Windows-Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - name: Version prüfen
+        shell: pwsh
+        run: |
+          $packageVersion = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          $tagVersion = "${{ github.ref_name }}".TrimStart("v")
+          if ($packageVersion -ne $tagVersion) {
+            throw "Tag $tagVersion und package.json $packageVersion stimmen nicht überein."
+          }
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm audit --omit=dev
+      - run: npm run desktop:package
+      - name: Update-Dateien prüfen
+        shell: pwsh
+        run: |
+          $tagVersion = "${{ github.ref_name }}".TrimStart("v")
+          $required = @(
+            "desktop-release/Dividendenfluss-Setup.exe",
+            "desktop-release/Dividendenfluss-Setup.exe.blockmap",
+            "desktop-release/latest.yml"
+          )
+          foreach ($file in $required) {
+            if (-not (Test-Path -LiteralPath $file)) { throw "Fehlende Release-Datei: $file" }
+          }
+          if (-not (Select-String -LiteralPath "desktop-release/latest.yml" -Pattern "version: $tagVersion" -Quiet)) {
+            throw "latest.yml enthält nicht die erwartete Version."
+          }
+      - name: GitHub-Release veröffentlichen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: pwsh
+        run: |
+          gh release create "${{ github.ref_name }}" `
+            "desktop-release/Dividendenfluss-Setup.exe" `
+            "desktop-release/Dividendenfluss-Setup.exe.blockmap" `
+            "desktop-release/latest.yml" `
+            --repo "${{ github.repository }}" `
+            --title "Dividendenfluss ${{ github.ref_name }}" `
+            --generate-notes `
+            --latest

@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import {
   createDemoSnapshot,
   createEmptySnapshot,
@@ -12,7 +12,19 @@ import {
   type PaymentStatus,
   type Snapshot,
 } from "../lib/model";
-import { loadSnapshot, saveSnapshot } from "../lib/storage";
+import { loadProfileStore, saveProfileStore } from "../lib/storage";
+import {
+  MAX_PROFILES,
+  activeProfile,
+  cleanProfileName,
+  createProfile,
+  createProfileStore,
+  normalizeProfileStore,
+  profileAccents,
+  updateActiveSnapshot,
+  type ProfileAccent,
+  type ProfileStore,
+} from "../lib/profiles";
 import {
   csvLooksLikePayments,
   holdingsToCsv,
@@ -21,6 +33,8 @@ import {
   rowsToHoldings,
   rowsToPayments,
 } from "../lib/csv";
+import { ProfilePicker, ProfileSettings } from "./profile-controls";
+import { UpdateCard } from "./update-card";
 
 type View = "dashboard" | "portfolio" | "payments" | "settings";
 type Modal =
@@ -276,7 +290,8 @@ function PaymentForm({ item, holdings, onCancel, onSave }: { item?: Payment; hol
 }
 
 export default function TrackerApp() {
-  const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
+  const [profileStore, setProfileStore] = useState<ProfileStore | null>(null);
+  const [profilePickerOpen, setProfilePickerOpen] = useState(false);
   const [view, setView] = useState<View>("dashboard");
   const [modal, setModal] = useState<Modal>(null);
   const [search, setSearch] = useState("");
@@ -284,27 +299,30 @@ export default function TrackerApp() {
   const [year, setYear] = useState(new Date().getFullYear());
   const [toast, setToast] = useState("");
   const importRef = useRef<HTMLInputElement>(null);
+  const currentProfile = profileStore ? activeProfile(profileStore) : null;
+  const snapshot = currentProfile?.snapshot ?? null;
 
   useEffect(() => {
-    loadSnapshot()
-      .then((saved) => {
-        const initial = saved ?? createDemoSnapshot();
-        setSnapshot(initial);
-        setView(initial.settings.startView);
+    loadProfileStore(createDemoSnapshot())
+      .then((store) => {
+        const initial = activeProfile(store);
+        setProfileStore(store);
+        setProfilePickerOpen(store.profiles.length > 1);
+        setView(initial.snapshot.settings.startView);
       })
       .catch(() => {
-        const initial = createDemoSnapshot();
-        setSnapshot(initial);
-        setView(initial.settings.startView);
+        const store = createProfileStore(createDemoSnapshot());
+        setProfileStore(store);
+        setView(activeProfile(store).snapshot.settings.startView);
       });
   }, []);
 
   useEffect(() => {
-    if (!snapshot) return;
+    if (!profileStore || !snapshot) return;
     document.documentElement.dataset.theme = snapshot.settings.theme;
     document.documentElement.dataset.textSize = snapshot.settings.textSize;
-    saveSnapshot(snapshot).catch(() => setToast("Lokales Speichern fehlgeschlagen"));
-  }, [snapshot]);
+    saveProfileStore(profileStore).catch(() => setToast("Lokales Speichern fehlgeschlagen"));
+  }, [profileStore, snapshot]);
 
   useEffect(() => {
     if (!toast) return;
@@ -312,7 +330,7 @@ export default function TrackerApp() {
     return () => window.clearTimeout(timer);
   }, [toast]);
 
-  const stats = useMemo(() => {
+  const stats = (() => {
     if (!snapshot) return null;
     const invested = snapshot.holdings.reduce((sum, holding) => sum + holding.quantity * holding.purchasePrice, 0);
     const marketValue = snapshot.holdings.reduce((sum, holding) => sum + holding.quantity * holding.currentPrice, 0);
@@ -326,7 +344,7 @@ export default function TrackerApp() {
       planned: yearPayments.filter((payment) => payment.status === "Geplant" && Number(payment.payDate.slice(5, 7)) === index + 1).reduce((sum, payment) => sum + payment.gross - payment.tax, 0),
     }));
     return { invested, marketValue, annualExpected, netReceived, netPlanned, monthly, yieldOnCost: invested ? (annualExpected / invested) * 100 : 0 };
-  }, [snapshot, year]);
+  })();
 
   if (!snapshot || !stats) {
     return <main className="loading-screen"><Logo /><div className="loading-line"><span /></div><p>Lokale Daten werden geöffnet …</p></main>;
@@ -349,7 +367,19 @@ export default function TrackerApp() {
   }, {})).sort((a, b) => b[1] - a[1]);
 
   function mutate(updater: (current: Snapshot) => Snapshot, message: string) {
-    setSnapshot((current) => current ? { ...updater(current), updatedAt: new Date().toISOString() } : current);
+    setProfileStore((current) => current
+      ? updateActiveSnapshot(current, (active) => ({
+          ...updater(active),
+          updatedAt: new Date().toISOString(),
+        }))
+      : current);
+    setToast(message);
+  }
+
+  function replaceActiveSnapshot(nextSnapshot: Snapshot, message: string) {
+    setProfileStore((current) => current
+      ? updateActiveSnapshot(current, () => normalizeSnapshot(nextSnapshot))
+      : current);
     setToast(message);
   }
 
@@ -415,14 +445,14 @@ export default function TrackerApp() {
 
   function startWithOwnData() {
     if (!window.confirm("Alle Beispieldaten entfernen und mit einem leeren Tracker starten?")) return;
-    setSnapshot(createEmptySnapshot(snapshot?.settings));
-    setToast("Bereit für deine Daten");
+    replaceActiveSnapshot(createEmptySnapshot(snapshot?.settings), "Bereit für deine Daten");
   }
 
   function exportBackup() {
-    const cleanSnapshot = { ...snapshot, exportedAt: new Date().toISOString() };
-    downloadFile(JSON.stringify(cleanSnapshot, null, 2), `dividenden-backup-${new Date().toISOString().slice(0, 10)}.json`, "application/json");
-    setToast("Lokales Backup erstellt");
+    if (!profileStore) return;
+    const backup = { ...profileStore, exportedAt: new Date().toISOString() };
+    downloadFile(JSON.stringify(backup, null, 2), `dividenden-backup-${new Date().toISOString().slice(0, 10)}.json`, "application/json");
+    setToast("Backup aller Profile erstellt");
   }
 
   async function importFile(file: File) {
@@ -430,11 +460,20 @@ export default function TrackerApp() {
       const extension = file.name.toLowerCase().split(".").pop();
       if (file.name.toLowerCase().endsWith(".json")) {
         const text = await file.text();
-        const imported = JSON.parse(text) as Snapshot;
-        if (!Array.isArray(imported.holdings) || !Array.isArray(imported.payments) || !imported.settings) throw new Error("Ungültiges Backup");
-        if (!window.confirm("Das Backup ersetzt die aktuell lokal gespeicherten Daten. Fortfahren?")) return;
-        setSnapshot(normalizeSnapshot({ ...imported, version: 1, updatedAt: new Date().toISOString() }));
-        setToast("Backup wiederhergestellt");
+        const imported = JSON.parse(text) as unknown;
+        if (imported && typeof imported === "object" && Array.isArray((imported as Partial<ProfileStore>).profiles)) {
+          if (!window.confirm("Dieses Backup ersetzt alle aktuell lokal gespeicherten Profile. Fortfahren?")) return;
+          const restored = normalizeProfileStore(imported);
+          setProfileStore(restored);
+          setProfilePickerOpen(false);
+          setView(activeProfile(restored).snapshot.settings.startView);
+          setToast("Alle Profile wiederhergestellt");
+        } else {
+          const legacy = imported as Snapshot;
+          if (!Array.isArray(legacy?.holdings) || !Array.isArray(legacy?.payments) || !legacy?.settings) throw new Error("Ungültiges Backup");
+          if (!window.confirm("Das Backup ersetzt die Daten des aktiven Profils. Fortfahren?")) return;
+          replaceActiveSnapshot(normalizeSnapshot({ ...legacy, version: 1, updatedAt: new Date().toISOString() }), "Profil-Backup wiederhergestellt");
+        }
       } else {
         let text: string;
         if (extension === "xlsx" || extension === "xls") {
@@ -467,6 +506,71 @@ export default function TrackerApp() {
     mutate((current) => ({ ...current, settings: { ...current.settings, ...next } }), "Einstellung gespeichert");
   }
 
+  function switchProfile(profileId: string) {
+    const next = profileStore?.profiles.find((profile) => profile.id === profileId);
+    if (!next) return;
+    setProfileStore((current) => current ? { ...current, activeProfileId: profileId } : current);
+    setView(next.snapshot.settings.startView);
+    setSearch("");
+    setModal(null);
+    setToast(`${next.name} ist jetzt aktiv`);
+  }
+
+  function createLocalProfile(name: string) {
+    if (!profileStore) return false;
+    const cleanName = cleanProfileName(name);
+    if (!cleanName || profileStore.profiles.length >= MAX_PROFILES) return false;
+    if (profileStore.profiles.some((profile) => profile.name.toLocaleLowerCase("de") === cleanName.toLocaleLowerCase("de"))) return false;
+    const profile = createProfile(
+      cleanName,
+      createEmptySnapshot(),
+      profileAccents[profileStore.profiles.length % profileAccents.length],
+    );
+    setProfileStore((current) => current ? {
+      ...current,
+      activeProfileId: profile.id,
+      profiles: [...current.profiles, profile],
+    } : current);
+    setView(profile.snapshot.settings.startView);
+    return true;
+  }
+
+  function renameProfile(profileId: string, name: string) {
+    const cleanName = cleanProfileName(name);
+    if (!cleanName) return;
+    setProfileStore((current) => current ? {
+      ...current,
+      profiles: current.profiles.map((profile) => profile.id === profileId
+        ? { ...profile, name: cleanName }
+        : profile),
+    } : current);
+  }
+
+  function setProfileAccent(profileId: string, accent: ProfileAccent) {
+    setProfileStore((current) => current ? {
+      ...current,
+      profiles: current.profiles.map((profile) => profile.id === profileId
+        ? { ...profile, accent }
+        : profile),
+    } : current);
+  }
+
+  function deleteProfile(profileId: string) {
+    if (!profileStore || profileStore.profiles.length <= 1) return;
+    const profile = profileStore.profiles.find((item) => item.id === profileId);
+    if (!profile || !window.confirm(`Profil „${profile.name}“ und alle zugehörigen lokalen Daten wirklich löschen?`)) return;
+    setProfileStore((current) => {
+      if (!current || current.profiles.length <= 1) return current;
+      const profiles = current.profiles.filter((item) => item.id !== profileId);
+      return {
+        ...current,
+        profiles,
+        activeProfileId: current.activeProfileId === profileId ? profiles[0].id : current.activeProfileId,
+      };
+    });
+    setToast(`Profil „${profile.name}“ gelöscht`);
+  }
+
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -475,13 +579,18 @@ export default function TrackerApp() {
           <span className="nav-label">TRACKER</span>
           {navItems.map((item) => <button key={item.id} className={view === item.id ? "active" : ""} onClick={() => { setView(item.id); setSearch(""); }}><span className="nav-icon">{item.icon}</span>{item.label}</button>)}
         </nav>
+        <button className="sidebar-profile" type="button" onClick={() => setProfilePickerOpen(true)}>
+          <span className={`profile-avatar small accent-${currentProfile?.accent ?? "lime"}`}>{initials(currentProfile?.name ?? "Investor")}</span>
+          <span><strong>{currentProfile?.name ?? "Investor"}</strong><small>{profileStore && profileStore.profiles.length > 1 ? "Profil wechseln" : "Profil verwalten"}</small></span>
+          <i>⌄</i>
+        </button>
       </aside>
 
       <main className="main-content">
         <header className="topbar">
           <div>
             <span className="eyebrow">{view === "dashboard" ? `PORTFOLIO · ${year}` : view === "portfolio" ? "DEINE POSITIONEN" : view === "payments" ? "DIVIDENDENKALENDER" : "DARSTELLUNG · DATEN · VERHALTEN"}</span>
-            <h1>{view === "dashboard" ? "Guten Tag, Investor." : view === "portfolio" ? "Portfolio" : view === "payments" ? "Zahlungen" : "Einstellungen"}</h1>
+            <h1>{view === "dashboard" ? `Guten Tag, ${currentProfile?.name ?? "Investor"}.` : view === "portfolio" ? "Portfolio" : view === "payments" ? "Zahlungen" : "Einstellungen"}</h1>
           </div>
           <div className="topbar-actions">
             {view !== "settings" && <button className="button lime" onClick={() => setModal({ kind: view === "payments" ? "payment" : "holding" })}><span>＋</span>{view === "payments" ? "Zahlung" : "Position"}</button>}
@@ -552,6 +661,16 @@ export default function TrackerApp() {
 
         {view === "settings" && (
           <div className="settings-grid">
+            <ProfileSettings
+              key={profileStore?.activeProfileId}
+              profiles={profileStore?.profiles ?? []}
+              activeProfileId={profileStore?.activeProfileId ?? ""}
+              onSwitch={switchProfile}
+              onCreate={createLocalProfile}
+              onRename={renameProfile}
+              onAccent={setProfileAccent}
+              onDelete={deleteProfile}
+            />
             <section className="settings-card settings-preferences">
               <div className="settings-heading"><div><span className="eyebrow">DARSTELLUNG & VERHALTEN</span><h2>Tracker anpassen</h2></div><span className="settings-icon">◎</span></div>
               <p className="settings-intro">Lege fest, wie der Tracker aussieht und welche Ansicht dich beim Öffnen begrüßt.</p>
@@ -563,14 +682,16 @@ export default function TrackerApp() {
                 <div className="field wide"><span>Startansicht</span><div className="segmented form-segmented start-view-control">{([['dashboard', 'Übersicht'], ['portfolio', 'Portfolio'], ['payments', 'Zahlungen']] as const).map(([value, label]) => <button key={value} className={snapshot.settings.startView === value ? "active" : ""} onClick={() => updateSettings({ startView: value })}>{label}</button>)}</div><small>Diese Seite wird beim nächsten Öffnen zuerst angezeigt.</small></div>
               </div>
             </section>
-            <section className="settings-card settings-data-card"><div className="settings-heading"><div><span className="eyebrow">DATEN VERWALTEN</span><h2>Import & Export</h2></div><span className="settings-icon">⇄</span></div><p className="settings-intro">Erstelle eine vollständige JSON-Sicherung oder tausche Tabellendaten per Excel/CSV aus.</p><div className="data-actions"><button className="data-action" onClick={exportBackup}><span className="data-icon">↓</span><span><strong>Vollständiges Backup</strong><small>Positionen, Zahlungen & Einstellungen · JSON</small></span><i>→</i></button><button className="data-action" onClick={() => downloadFile(holdingsToCsv(snapshot.holdings), `portfolio-export-${new Date().toISOString().slice(0, 10)}.csv`, "text/csv;charset=utf-8")}><span className="data-icon">▦</span><span><strong>Portfolio als CSV</strong><small>Kompatibel mit Tabellenprogrammen</small></span><i>→</i></button><button className="data-action" onClick={() => downloadFile(paymentsToCsv(snapshot.payments), `dividenden-export-${new Date().toISOString().slice(0, 10)}.csv`, "text/csv;charset=utf-8")}><span className="data-icon">↗</span><span><strong>Zahlungen als CSV</strong><small>Dein Dividendenjournal</small></span><i>→</i></button><button className="data-action" onClick={() => importRef.current?.click()}><span className="data-icon lime-icon">↑</span><span><strong>Datei importieren</strong><small>Excel, CSV oder Backup</small></span><i>→</i></button><input ref={importRef} className="sr-only" type="file" accept=".json,.csv,.xlsx,.xls,text/csv,application/json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" onChange={(event) => event.target.files?.[0] && importFile(event.target.files[0])} /></div></section>
-            <section className="settings-card danger-card"><div className="settings-heading"><div><span className="eyebrow">LOKALE DATEN</span><h2>Neu beginnen</h2></div><span className="settings-icon danger">!</span></div><p>Entfernt alle Positionen und Zahlungen aus diesem Browser. Erstelle vorher bei Bedarf ein Backup.</p><button className="button danger-button" onClick={() => { if (window.confirm("Alle lokal gespeicherten Portfolio- und Zahlungsdaten unwiderruflich löschen?")) { setSnapshot(createEmptySnapshot(snapshot.settings)); setToast("Lokale Daten gelöscht"); } }}>Alle lokalen Daten löschen</button></section>
+            <section className="settings-card settings-data-card"><div className="settings-heading"><div><span className="eyebrow">DATEN VERWALTEN</span><h2>Import & Export</h2></div><span className="settings-icon">⇄</span></div><p className="settings-intro">Erstelle eine vollständige JSON-Sicherung oder tausche Tabellendaten per Excel/CSV aus.</p><div className="data-actions"><button className="data-action" onClick={exportBackup}><span className="data-icon">↓</span><span><strong>Vollständiges Backup</strong><small>Alle Profile, Positionen, Zahlungen & Einstellungen · JSON</small></span><i>→</i></button><button className="data-action" onClick={() => downloadFile(holdingsToCsv(snapshot.holdings), `portfolio-export-${new Date().toISOString().slice(0, 10)}.csv`, "text/csv;charset=utf-8")}><span className="data-icon">▦</span><span><strong>Portfolio als CSV</strong><small>Kompatibel mit Tabellenprogrammen</small></span><i>→</i></button><button className="data-action" onClick={() => downloadFile(paymentsToCsv(snapshot.payments), `dividenden-export-${new Date().toISOString().slice(0, 10)}.csv`, "text/csv;charset=utf-8")}><span className="data-icon">↗</span><span><strong>Zahlungen als CSV</strong><small>Dein Dividendenjournal</small></span><i>→</i></button><button className="data-action" onClick={() => importRef.current?.click()}><span className="data-icon lime-icon">↑</span><span><strong>Datei importieren</strong><small>Excel, CSV oder Backup</small></span><i>→</i></button><input ref={importRef} className="sr-only" type="file" accept=".json,.csv,.xlsx,.xls,text/csv,application/json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" onChange={(event) => event.target.files?.[0] && importFile(event.target.files[0])} /></div></section>
+            <UpdateCard />
+            <section className="settings-card danger-card"><div className="settings-heading"><div><span className="eyebrow">AKTIVES PROFIL</span><h2>Neu beginnen</h2></div><span className="settings-icon danger">!</span></div><p>Entfernt alle Positionen und Zahlungen aus „{currentProfile?.name}“. Andere Profile bleiben unverändert. Erstelle vorher bei Bedarf ein Backup.</p><button className="button danger-button" onClick={() => { if (window.confirm("Alle Portfolio- und Zahlungsdaten des aktiven Profils unwiderruflich löschen?")) replaceActiveSnapshot(createEmptySnapshot(snapshot.settings), "Profildaten gelöscht"); }}>Daten dieses Profils löschen</button></section>
           </div>
         )}
       </main>
 
       <nav className="mobile-nav" aria-label="Mobile Navigation">{navItems.map((item) => <button key={item.id} className={view === item.id ? "active" : ""} onClick={() => setView(item.id)}><span>{item.icon}</span>{item.label}</button>)}</nav>
 
+      <ProfilePicker profiles={profileStore?.profiles ?? []} open={profilePickerOpen} onClose={() => setProfilePickerOpen(false)} onSwitch={switchProfile} />
       {modal && <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label={modal.kind === "holding" ? modal.item ? "Position bearbeiten" : "Position anlegen" : modal.item ? "Zahlung bearbeiten" : "Zahlung anlegen"}>{modal.kind === "holding" ? <HoldingForm item={modal.item} currency={currency} onCancel={() => setModal(null)} onSave={saveHolding} onQuickSave={saveQuickHolding} /> : <PaymentForm item={modal.item} holdings={snapshot.holdings} onCancel={() => setModal(null)} onSave={savePayment} />}</div>}
       {toast && <div className="toast"><span>✓</span>{toast}</div>}
     </div>

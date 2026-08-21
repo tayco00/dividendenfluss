@@ -1,8 +1,10 @@
 import { normalizeSnapshot, type Snapshot } from "./model";
+import { createProfileStore, normalizeProfileStore, type ProfileStore } from "./profiles";
 
 const DB_NAME = "dividendenfluss-local";
 const STORE_NAME = "snapshots";
 const SNAPSHOT_KEY = "primary";
+const PROFILE_STORE_KEY = "profiles-v1";
 
 function openDatabase(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -43,4 +45,40 @@ export async function saveSnapshot(snapshot: Snapshot): Promise<void> {
     };
     transaction.onerror = () => reject(transaction.error);
   });
+}
+
+async function readValue<T>(key: string): Promise<T | undefined> {
+  const db = await openDatabase();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(STORE_NAME, "readonly");
+    const request = transaction.objectStore(STORE_NAME).get(key);
+    request.onsuccess = () => resolve(request.result as T | undefined);
+    request.onerror = () => reject(request.error);
+    transaction.oncomplete = () => db.close();
+  });
+}
+
+async function writeValue(key: string, value: unknown): Promise<void> {
+  const db = await openDatabase();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(STORE_NAME, "readwrite");
+    transaction.objectStore(STORE_NAME).put(value, key);
+    transaction.oncomplete = () => {
+      db.close();
+      resolve();
+    };
+    transaction.onerror = () => reject(transaction.error);
+  });
+}
+
+export async function loadProfileStore(fallbackSnapshot: Snapshot): Promise<ProfileStore> {
+  const stored = await readValue<ProfileStore>(PROFILE_STORE_KEY);
+  if (stored) return normalizeProfileStore(stored);
+
+  const legacy = await loadSnapshot();
+  return createProfileStore(legacy ?? fallbackSnapshot);
+}
+
+export async function saveProfileStore(store: ProfileStore): Promise<void> {
+  await writeValue(PROFILE_STORE_KEY, normalizeProfileStore(store));
 }

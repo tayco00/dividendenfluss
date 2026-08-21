@@ -41,6 +41,14 @@ export type AppSettings = {
   startView: StartView;
 };
 
+export const defaultSettings: AppSettings = {
+  currency: "EUR",
+  annualGoal: 1200,
+  theme: "light",
+  textSize: "standard",
+  startView: "dashboard",
+};
+
 export type Snapshot = {
   version: 1;
   holdings: Holding[];
@@ -129,7 +137,7 @@ export function createDemoSnapshot(): Snapshot {
     version: 1,
     holdings,
     payments,
-    settings: { currency: "EUR", annualGoal: 1200, theme: "light", textSize: "standard", startView: "dashboard" },
+    settings: { ...defaultSettings },
     updatedAt: now,
   };
 }
@@ -139,19 +147,37 @@ export function createEmptySnapshot(settings?: AppSettings): Snapshot {
     version: 1,
     holdings: [],
     payments: [],
-    settings: settings ?? { currency: "EUR", annualGoal: 1200, theme: "light", textSize: "standard", startView: "dashboard" },
+    settings: settings ?? { ...defaultSettings },
     updatedAt: new Date().toISOString(),
   };
 }
 
 export function normalizeSnapshot(snapshot: Snapshot): Snapshot {
-  const settings = snapshot.settings as AppSettings & { textSize?: TextSize; startView?: StartView };
+  const settings = (snapshot?.settings ?? {}) as Partial<AppSettings>;
+  const currency = ["EUR", "USD", "CHF", "GBP"].includes(settings.currency ?? "")
+    ? settings.currency as AppSettings["currency"]
+    : defaultSettings.currency;
+  const theme = settings.theme === "dark" ? "dark" : "light";
+  const textSize = ["compact", "standard", "large"].includes(settings.textSize ?? "")
+    ? settings.textSize as TextSize
+    : defaultSettings.textSize;
+  const startView = ["dashboard", "portfolio", "payments"].includes(settings.startView ?? "")
+    ? settings.startView as StartView
+    : defaultSettings.startView;
   return {
     ...snapshot,
+    version: 1,
+    holdings: Array.isArray(snapshot?.holdings) ? snapshot.holdings : [],
+    payments: Array.isArray(snapshot?.payments) ? snapshot.payments : [],
     settings: {
-      ...settings,
-      textSize: settings.textSize ?? "standard",
-      startView: settings.startView ?? "dashboard",
+      currency,
+      annualGoal: Number.isFinite(Number(settings.annualGoal))
+        ? Math.max(0, Number(settings.annualGoal))
+        : defaultSettings.annualGoal,
+      theme,
+      textSize,
+      startView,
     },
+    updatedAt: typeof snapshot?.updatedAt === "string" ? snapshot.updatedAt : new Date().toISOString(),
   };
 }

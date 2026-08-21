@@ -1,6 +1,6 @@
 {
   "name": "dividendenfluss",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Dividendenfluss",
   "private": true,
   "main": "desktop/main.mjs",
@@ -12,16 +12,17 @@
     "build": "vinext build",
     "start": "vinext start",
     "desktop:build": "tsc --noEmit -p tsconfig.desktop.json && vite build --config desktop.vite.config.ts",
-    "desktop:package": "npm run desktop:build && electron-builder --win portable --x64",
-    "test": "npm run build && node --import tsx --test tests/rendered-html.test.mjs tests/csv-legacy.test.ts tests/settings.test.ts",
+    "desktop:package": "npm run desktop:build && electron-builder --win nsis --x64",
+    "test": "npm run build && node --import tsx --test tests/rendered-html.test.mjs tests/desktop-update.test.mjs tests/csv-legacy.test.ts tests/settings.test.ts tests/profiles.test.ts",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern desktop-dist --ignore-pattern desktop-release --ignore-pattern .next",
     "db:generate": "drizzle-kit generate"
   },
   "dependencies": {
     "drizzle-orm": "0.45.2",
+    "electron-updater": "^6.8.9",
     "react": "19.2.6",
     "react-dom": "19.2.6",
-    "xlsx": "^0.18.5"
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "1.37.1",
@@ -52,6 +53,9 @@
     "wrangler": "4.92.0"
   },
   "type": "module",
+  "overrides": {
+    "js-yaml": "4.3.1"
+  },
   "build": {
     "appId": "de.dividendenfluss.app",
     "productName": "Dividendenfluss",
@@ -61,12 +65,35 @@
     "files": [
       "desktop-dist/**/*",
       "desktop/main.mjs",
+      "desktop/preload.cjs",
+      "desktop/startup-window.mjs",
+      "desktop/startup.html",
+      "desktop/startup-renderer.js",
+      "desktop/update-service.mjs",
+      "desktop/window-state.mjs",
       "desktop/icon.png"
     ],
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "tayco00",
+        "repo": "dividendenfluss",
+        "releaseType": "release"
+      }
+    ],
     "win": {
-      "target": "portable",
+      "target": "nsis",
       "icon": "desktop/icon.png",
       "artifactName": "Dividendenfluss.${ext}"
+    },
+    "nsis": {
+      "artifactName": "Dividendenfluss-Setup.exe",
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Dividendenfluss",
+      "uninstallDisplayName": "Dividendenfluss"
     }
   }
 }

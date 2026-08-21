@@ -1,6 +1,6 @@
 # Dividendenfluss
 
-Ein moderner, datensparsamer Dividendentracker. Portfolio, Ausschüttungen und Einstellungen werden ausschließlich in der IndexedDB des verwendeten Browsers gespeichert.
+Ein moderner, datensparsamer Dividendentracker. Portfolio, Ausschüttungen, Profile und Einstellungen werden ausschließlich in der lokalen Programmdatenbank gespeichert.
 
 ## Funktionen
 
@@ -11,22 +11,31 @@ Ein moderner, datensparsamer Dividendentracker. Portfolio, Ausschüttungen und E
 - vollständige lokale JSON-Backups und Wiederherstellung
 - responsive Oberfläche mit hellem und dunklem Farbschema
 - einstellbare Textgröße mit lesbarer Standarddarstellung
+- bis zu sechs vollständig getrennte lokale Profile mit eigener Farbe und Profilauswahl beim Start
+- integrierte Updateprüfung mit Downloadfortschritt, Offline-Fallback und sicherem Neustart
+- automatische Wiederherstellung der letzten Fenstergröße und -position
 - Beispieldaten für den Einstieg, mit einem Klick vollständig entfernbar
-- Windows-Programm mit eigenem App-Symbol und Infobereich-Menü
+- installierbares Windows-Programm mit eigenem App-Symbol sowie Desktop- und Startmenü-Verknüpfung
 
 ## Datenschutz
 
-Es existiert keine serverseitige Datenbank und kein Benutzerkonto. Persönliche Einträge werden weder an den Server übertragen noch in Git geschrieben. Export- und Backup-Dateien sind zusätzlich über `.gitignore` ausgeschlossen. Im Repository befinden sich ausschließlich als Demo gekennzeichnete Beispieldaten.
+Es existiert keine serverseitige Datenbank und kein Online-Konto. Persönliche Einträge und Profilnamen werden weder an einen Server übertragen noch in Git geschrieben. Die Updateprüfung fragt ausschließlich öffentliche Versionsinformationen bei GitHub ab. Export- und Backup-Dateien sind zusätzlich über `.gitignore` ausgeschlossen. Im Repository befinden sich ausschließlich als Demo gekennzeichnete Beispieldaten.
 
-Wichtig: Browserdaten gehören zum jeweiligen Browserprofil. Vor dem Löschen von Browserdaten oder einem Gerätewechsel sollte ein JSON-Backup unter **Einstellungen** erstellt werden.
+Wichtig: Vor einer Windows-Neuinstallation oder einem Gerätewechsel sollte unter **Einstellungen** ein vollständiges JSON-Backup aller Profile erstellt werden.
 
 ## Windows-Programm
 
-Die fertige portable Anwendung liegt als `Dividendenfluss.exe` im Projektordner. Ein Doppelklick öffnet den Tracker in einem eigenen Programmfenster – ohne Browserleiste, Tabs oder separat laufenden lokalen Dienst. Einträge und Einstellungen bleiben in der lokalen Programmdatenbank auf diesem Gerät.
+Die aktuelle Version wird über [GitHub Releases](https://github.com/tayco00/dividendenfluss/releases/latest) als `Dividendenfluss-Setup.exe` bereitgestellt. Der Installer legt genau eine Verknüpfung **Dividendenfluss** auf dem Desktop und im Startmenü an. Das eigentliche Programm heißt `Dividendenfluss.exe` und öffnet den Tracker in einem eigenen Fenster – ohne Browserleiste, Tabs oder separat laufenden Dienst.
 
-Bereits in der früheren Browser-Version gespeicherte Einträge werden nicht gelöscht. Für die einmalige Übernahme zuerst dort unter **Einstellungen** ein vollständiges Backup erstellen und dieses anschließend im neuen Programm importieren.
+Bereits in der bisherigen Programmversion gespeicherte Einträge werden beim ersten Start automatisch dem Profil **Investor** zugeordnet. Alte Einzelprofil-Backups bleiben importierbar; neue vollständige Backups enthalten alle Profile.
 
-Die Desktop-Verknüpfung ist bewusst nicht im Repository enthalten, weil sie einen gerätespezifischen absoluten Pfad verwendet. Die EXE selbst arbeitet ausschließlich mit relativen Pfaden und enthält keine Portfolio- oder Zahlungsdaten.
+Desktop-Verknüpfung, installierte Programmdateien, Fensterstatus und lokale Daten sind bewusst nicht im Repository enthalten. Installer und Anwendung enthalten ausschließlich den Programmcode und die als Demo markierten Beispieldaten – keine Portfolio-, Zahlungs- oder Profildaten.
+
+## Updates
+
+Die installierte App prüft beim Start, auf Wunsch in den **Einstellungen** und während längerer Laufzeit nach neuen GitHub-Releases. Ein gefundenes Update wird mit der von `electron-builder` erzeugten Prüfsumme kontrolliert, heruntergeladen und nach Zustimmung beziehungsweise beim nächsten Start installiert. Wenn GitHub nicht erreichbar ist, startet Dividendenfluss ohne Einschränkung weiter.
+
+Ein Tag wie `v0.2.0` löst die geprüfte Windows-Paketierung aus und veröffentlicht Installer, Blockmap und `latest.yml` gemeinsam. Dadurch stammen Programmdatei und Integritätsinformationen immer aus demselben Build.
 
 ## Unterstützte CSV-Spalten
 

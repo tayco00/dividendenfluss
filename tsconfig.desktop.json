@@ -5,6 +5,9 @@
   },
   "include": [
     "app/tracker-app.tsx",
+    "app/profile-controls.tsx",
+    "app/update-card.tsx",
+    "app/**/*.d.ts",
     "lib/**/*.ts",
     "desktop/main.tsx"
   ],
