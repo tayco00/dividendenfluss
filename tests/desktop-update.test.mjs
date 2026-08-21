@@ -14,7 +14,7 @@ const [main, preload, updater, startup, windowState, workflow, tracker] = await 
 ]);
 
 test("ships an installable GitHub update channel", () => {
-  assert.equal(packageJson.version, "0.2.1");
+  assert.equal(packageJson.version, "0.2.2");
   assert.match(packageJson.scripts["desktop:package"], /--publish never/);
   assert.equal(packageJson.dependencies["electron-updater"], "^6.8.9");
   assert.match(packageJson.dependencies.xlsx, /xlsx-0\.20\.3/);
@@ -30,7 +30,7 @@ test("checks at startup, manually and repeatedly and can install a downloaded up
   assert.match(updater, /checkForUpdatesAndNotify\(\)/);
   assert.match(updater, /UPDATE_CHECK_INTERVAL_MS = 6 \* 60 \* 60 \* 1000/);
   assert.match(updater, /"download-progress"/);
-  assert.match(updater, /quitAndInstall\(false, true\)/);
+  assert.match(updater, /quitAndInstall\(true, true\)/);
   assert.match(preload, /dividendenfluss:check-for-updates/);
   assert.match(preload, /dividendenfluss:update-status/);
   assert.match(main, /event\.sender !== mainWindow\.webContents/);

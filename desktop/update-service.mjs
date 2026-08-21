@@ -64,7 +64,7 @@ export function createUpdateService({
   const installReadyUpdate = () => {
     if (!updateReady) return;
     onBeforeInstall();
-    autoUpdater.quitAndInstall(false, true);
+    autoUpdater.quitAndInstall(true, true);
   };
 
   const showUpdateReadyNotification = () => {
@@ -209,7 +209,7 @@ export function createUpdateService({
         });
         setTimeout(() => {
           onBeforeInstall();
-          autoUpdater.quitAndInstall(false, true);
+          autoUpdater.quitAndInstall(true, true);
         }, 900);
         return;
       }

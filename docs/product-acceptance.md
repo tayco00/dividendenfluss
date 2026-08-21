@@ -2,7 +2,7 @@
 
 Die Produktstufe ist erst abgeschlossen, wenn alle folgenden Punkte erfüllt sind:
 
-1. **Updates:** Die installierte Windows-App prüft beim Start, manuell und alle sechs Stunden auf neue öffentliche GitHub-Releases. Downloadfortschritt, Offline-Fehler, Installation und Neustart sind abgedeckt.
+1. **Updates:** Die installierte Windows-App prüft beim Start, manuell und alle sechs Stunden auf neue öffentliche GitHub-Releases. Downloadfortschritt, Offline-Fehler, stille Installation nach der Bestätigung in der App und automatischer Neustart sind abgedeckt.
 2. **Veröffentlichung:** Ein Versions-Tag erzeugt reproduzierbar Installer, Blockmap und `latest.yml` und veröffentlicht alle drei Dateien gemeinsam.
 3. **Profile:** Bis zu sechs lokale Profile lassen sich anlegen, umbenennen, gestalten, wechseln und – außer dem letzten – löschen. Jedes Profil besitzt vollständig getrennte Positionen, Zahlungen und Einstellungen.
 4. **Migration:** Die bisherige lokale Einzel-Datenbank wird beim ersten Start automatisch und verlustfrei dem Profil „Investor“ zugeordnet. Alte JSON-Backups bleiben importierbar.

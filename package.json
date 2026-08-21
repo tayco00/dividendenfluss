@@ -1,6 +1,6 @@
 {
   "name": "dividendenfluss",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Dividendenfluss",
   "private": true,
   "main": "desktop/main.mjs",
